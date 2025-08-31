@@ -1,13 +1,18 @@
-const BASE =
-  (import.meta.env.VITE_BACKEND_URL || "http://localhost:3000").replace(/\/+$/, "");
+const BASE = (import.meta.env.VITE_BACKEND_URL || "http://localhost:3000")
+  .replace(/\/+$/, "");
 
-async function handle(r) {
-  if (!r.ok) {
-    const txt = await r.text().catch(() => "");
-    throw new Error(txt || `HTTP ${r.status}`);
+async function handle(res) {
+  try {
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      throw new Error(txt || `HTTP ${res.status}`);
+    }
+    const ct = res.headers.get("content-type") || "";
+    return ct.includes("application/json") ? res.json() : res.text();
+  } catch (err) {
+    console.error("API error:", err);
+    throw err;
   }
-  const ct = r.headers.get("content-type") || "";
-  return ct.includes("application/json") ? r.json() : r.text();
 }
 
 export async function apiGet(path) {
@@ -22,4 +27,8 @@ export async function apiJson(method, path, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   return handle(res);
+}
+
+export async function apiDelete(path) {
+  return apiJson("DELETE", path);
 }
