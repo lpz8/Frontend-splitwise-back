@@ -100,9 +100,9 @@ export async function getUsers() {
    - **Build command**: `npm run build`
    - **Publish directory**: `dist`
 4. En **Site configuration → Environment variables** añadí:
-   - `VITE_BACKEND_URL` = `https://mi-api-splitwise.onrender.com`
+   - `VITE_BACKEND_URL` = `https://backend-splitwise-back.onrender.com`
 5. Deploy. Cuando termine, la web queda en algo así:
-   - `https://mi-front-splitwise.netlify.app`
+   - `https://frontend-splitwise-back.netlify.app`
 
  >Revisar siempre que `VITE_BACKEND_URL` apunta a **HTTPS** (Render).
 
@@ -115,7 +115,11 @@ VITE_BACKEND_URL=http://localhost:3000
 ```
 
 **Netlify → Environment variables**
-- `VITE_BACKEND_URL=https://mi-api-splitwise.onrender.com`
+- `VITE_BACKEND_URL=frontend-splitwise-back.netlify.app`
+
+**Netlifi + Render**
+    Añadida la variable de entorno VITE_BACKEND_URL en Netlify apuntando al backend en Render.
+	•	Redeploy del sitio en Netlify usando Trigger deploy → Deploy site para aplicar los cambios.
 
 ---
 
