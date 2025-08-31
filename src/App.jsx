@@ -7,22 +7,23 @@ import Users from "./pages/Users.jsx";
 import Readme from "./pages/Readme.jsx";
 import "./App.css";
 
-export default function App() {
+export default function App(){
   const linkClass = ({ isActive }) => "nav-link" + (isActive ? " is-active" : "");
 
   return (
-    <div className="app">
-      <div className="brand-badge" title="THE BRIDGE">
-        <img src="/bridge.png" alt="The Bridge" />
-      </div>
+  <div className="app">
+    <div className="brand-badge" title="THE BRIDGE">
+      <img src="/bridge.png" alt="The Bridge" />
+    </div>
 
-      <nav className="nav">
-        <NavLink to="/" className={linkClass}>Inicio</NavLink>
-        <NavLink to="/expenses" className={linkClass}>Gastos</NavLink>
-        <NavLink to="/expenses/new" className={linkClass}>Nuevo Gasto</NavLink>
-        <NavLink to="/users" className={linkClass}>Usuarios</NavLink>
-      </nav>
+    <nav className="nav">
+      <NavLink to="/" className={linkClass}>Inicio</NavLink>
+      <NavLink to="/expenses" className={linkClass}>Gastos</NavLink>
+      <NavLink to="/expenses/new" className={linkClass}>Nuevo Gasto</NavLink>
+      <NavLink to="/users" className={linkClass}>Usuarios</NavLink>
+    </nav>
 
+    <div className="page">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/expenses" element={<ExpensesList />} />
@@ -32,7 +33,14 @@ export default function App() {
         <Route path="/users" element={<Users />} />
         <Route path="/readme" element={<Readme />} />
       </Routes>
-      <a className="footer-note" href="/readme">by:lpz8⚽️</a>
     </div>
-  );
+
+    <div style={{position:"fixed", right:14, bottom:12, display:"flex", gap:8, zIndex:10}}>
+    <div className="footer-wrap">
+        <a className="footer-link" href="https://github.com/lpz8/Backend-splitwise-back/blob/main/README.md" target="_blank">by: lpz8</a>
+        <a className="footer-ball" href="https://github.com/lpz8/Frontend-splitwise-back/blob/main/README.md" target="_blank">⚽️</a>
+    </div>
+    </div>
+  </div>
+);
 }

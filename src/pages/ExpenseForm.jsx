@@ -5,107 +5,137 @@ import { apiGet, apiJson } from "../api";
 export default function ExpenseForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({
-    title: "", amount: "", paidBy: "", participants: [], date: "", description: ""
-  });
-  const [error, setError] = useState("");
+  const [title, setTitle] = useState("");
+  const [amount, setAmount] = useState("");
+  const [paidBy, setPaidBy] = useState("");
+  const [participants, setParticipants] = useState([]);
+  const [date, setDate] = useState("");
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
-    apiGet("/users").then(setUsers);
-    if (id) apiGet(`/expenses/${id}`).then(e => {
-      setForm({
-        title: e.title,
-        amount: e.amount,
-        paidBy: e.paidBy?._id || e.paidBy,
-        participants: (e.participants || []).map(p => p._id || p),
-        date: e.date?.slice(0,10) || "",
-        description: e.description || ""
-      });
-    });
+    (async () => {
+      const u = await apiGet("/users");
+      setUsers(u);
+      if (id) {
+        const exp = await apiGet(`/expenses/${id}`);
+        setTitle(exp.title ?? "");
+        setAmount(String(exp.amount ?? ""));
+        setPaidBy(exp.paidBy?._id ?? "");
+        setParticipants((exp.participants || []).map(p => p._id));
+        setDate(exp.date ? exp.date.slice(0, 10) : "");
+        setDescription(exp.description ?? "");
+      }
+    })().catch(console.error);
   }, [id]);
 
-  const updateField = (k, v) => setForm(s => ({ ...s, [k]: v }));
-  const toggleParticipant = (uid) => {
-    setForm(s => {
-      const has = s.participants.includes(uid);
-      return { ...s, participants: has ? s.participants.filter(x => x !== uid) : [...s.participants, uid] };
-    });
-  };
+  function toggleParticipant(uid) {
+    setParticipants(prev =>
+      prev.includes(uid) ? prev.filter(x => x !== uid) : [...prev, uid]
+    );
+  }
 
-  const onSubmit = async (e) => {
+  async function onSubmit(e) {
     e.preventDefault();
-    setError("");
-    try {
-      const payload = {
-        ...form,
-        amount: Number(form.amount),
-        date: form.date ? new Date(form.date).toISOString() : undefined
-      };
-      if (id) await apiJson("PUT", `/expenses/${id}`, payload);
-      else await apiJson("POST", "/expenses", payload);
-      navigate("/expenses");
-    } catch (err) {
-      setError("Revisa los datos (faltan campos o formato incorrecto)");
+    const payload = {
+      title: title.trim(),
+      amount: Number(amount),
+      paidBy,
+      participants,
+      date: date || undefined,
+      description: description.trim(),
+    };
+    if (!payload.title || !payload.amount || !payload.paidBy || !payload.participants.length) {
+      alert("Faltan datos obligatorios");
+      return;
     }
-  };
+    if (id) {
+      await apijson("PUT", `/expenses/${id}`, payload);
+    } else {
+      await apijson("POST", "/expenses", payload);
+    }
+    navigate("/expenses");
+  }
+
+  const avatarSrc = (nameStr = "") =>
+    /a$|e$|i$|o$|u$|as$|ia$|na$|la$|ra$|ía$|ara$/i.test(nameStr.trim())
+      ? "/female.png"
+      : "/male.png";
 
   return (
-    <div className="card">
-      <h2>{id ? "Editar Gasto" : "Nuevo Gasto"}</h2>
-      <form onSubmit={onSubmit}>
-        <div className="row">
-          <div>
-            <label>Título</label>
-            <input value={form.title} onChange={e => updateField("title", e.target.value)} />
-          </div>
-          <div>
-            <label>Importe (€)</label>
-            <input type="number" step="0.01" value={form.amount} onChange={e => updateField("amount", e.target.value)} />
-          </div>
-        </div>
+    <div className="app">
+      <div className="card">
+        <h1>{id ? "Editar Gasto" : "Nuevo Gasto"}</h1>
 
-        <div className="row">
-          <div>
-            <label>Pagado por</label>
-            <select value={form.paidBy} onChange={e => updateField("paidBy", e.target.value)}>
-              <option value="">-- elige --</option>
-              {users.map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
-            </select>
+        <form className="form" onSubmit={onSubmit}>
+          <input
+            className="input"
+            placeholder="Título"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+
+          <input
+            className="input"
+            placeholder="Importe (€)"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            style={{ marginTop: 10 }}
+          />
+
+          <select
+            className="input"
+            value={paidBy}
+            onChange={(e) => setPaidBy(e.target.value)}
+            style={{ marginTop: 10 }}
+          >
+            <option value="">— elige quién pagó —</option>
+            {users.map(u => (
+              <option key={u._id} value={u._id}>{u.name}</option>
+            ))}
+          </select>
+
+          <div style={{ marginTop: 14, marginBottom: 6, color: "var(--text)", fontWeight: 600 }}>
+            Usuarios:
           </div>
-          <div>
-            <label>Fecha</label>
-            <input type="date" value={form.date} onChange={e => updateField("date", e.target.value)} />
+          <div style={{ display: "grid", gap: 8 }}>
+            {users.map(u => (
+              <label key={u._id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="checkbox"
+                  checked={participants.includes(u._id)}
+                  onChange={() => toggleParticipant(u._id)}
+                />
+                <img src={avatarSrc(u.name)} alt="" className="avatar" />
+                <span>{u.name}</span>
+              </label>
+            ))}
           </div>
-        </div>
-         
-         <div>
-       <label>Participantes</label>
-       <div className="actions">
-         {users.map(u => (
-           <label key={u._id} className="participant-chip">
-             <span>{u.name}</span>
-             <input
-               type="checkbox"
-               checked={form.participants.includes(u._id)}
-               onChange={() => toggleParticipant(u._id)}
-               />
-           </label>
-         ))}
-       </div>
+
+          <input
+            className="input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            style={{ marginTop: 12 }}
+          />
+
+          <textarea
+            className="input"
+            placeholder="Descripción"
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            style={{ marginTop: 10 }}
+          />
+
+          <button type="submit" className="btn" style={{ marginTop: 12 }}>
+            {id ? "Guardar cambios" : "Guardar"}
+          </button>
+        </form>
       </div>
-        
-         <div>
-       <label>Descripción</label>
-          <textarea rows="3" value={form.description} onChange={e => updateField("description", e.target.value)} />
-        </div>
-
-        {error && <p style={{ color: "#ef4444" }}>{error}</p>}
-
-        <div className="actions" style={{ marginTop: 10 }}>
-          <button className="btn">{id ? "Guardar Cambios" : "Crear Gastos"}</button>
-        </div>
-      </form>
     </div>
   );
 }

@@ -4,31 +4,44 @@ import { apiGet, apiJson } from "../api";
 
 export default function ExpenseDetail() {
   const { id } = useParams();
-  const [exp, setExp] = useState(null);
   const navigate = useNavigate();
+  const [exp, setExp] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { apiGet(`/expenses/${id}`).then(setExp).catch(console.error); }, [id]);
+  useEffect(() => {
+    apiGet(`/expenses/${id}`)
+      .then(setExp)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  const onDelete = async () => {
+  async function onDelete() {
     if (!confirm("¿Borrar este gasto?")) return;
     await apiJson("DELETE", `/expenses/${id}`);
     navigate("/expenses");
-  };
+  }
 
-  if (!exp) return <div className="card">Cargando…</div>;
+  if (loading) return <div className="card">Cargando…</div>;
+  if (!exp) return <div className="card">No se encontró el gasto.</div>;
 
   return (
-    <div className="card">
-      <h2>{exp.title}</h2>
-      <p><b>Importe:</b> {exp.amount} €</p>
-      <p><b>Pagó:</b> {exp.paidBy?.name}</p>
-      <p><b>Participantes:</b> {exp.participants?.map(p => p.name).join(", ")}</p>
-      <p><b>Fecha:</b> {new Date(exp.date).toLocaleString()}</p>
-      {exp.description && <p><b>Notas:</b> {exp.description}</p>}
-      <div className="actions">
-        <Link className="btn" to={`/expenses/${id}/edit`}>Editar</Link>
-        <button className="btn-danger" onClick={onDelete}>Borrar</button>
-        <Link className="btn-ghost" to="/expenses">Volver</Link>
+    <div className="app">
+      <div className="card">
+        <h2 style={{ marginTop: 0 }}>{exp.title}</h2>
+        <p><b>Importe:</b> {exp.amount} €</p>
+        <p><b>Pagó:</b> {exp.paidBy?.name || "—"}</p>
+        {exp.date && <p><b>Fecha:</b> {new Date(exp.date).toLocaleDateString()}</p>}
+        {exp.description && <p><b>Descripción:</b> {exp.description}</p>}
+        <div style={{ marginTop: 12, display: "flex", gap: 10 }}>
+          <Link className="btn" to={`/expenses/${id}/edit`}>Editar</Link>
+          <button
+            className="btn"
+            style={{ background: "#e35151", borderColor: "#ff8a8a" }}
+            onClick={onDelete}
+          >
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
   );

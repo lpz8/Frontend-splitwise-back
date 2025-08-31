@@ -15,28 +15,33 @@ export default function Home() {
     load().catch(console.error);
   }, []);
 
-  const nameOf = (id) => users.find(u => String(u._id) === String(id))?.name || "Desconocido";
+  const nameOf = (id) =>
+    users.find(u => String(u._id) === String(id))?.name || "Desconocido";
 
   return (
     <div className="app">
       <div className="card">
         <h1>Resumen de deudas</h1>
-        {debts.length === 0 ? <p>No hay deudas todavía.</p> : (
-          <table>
-            <thead><tr>
-                <th className="th-badge">Quién</th>
-                <th className="th-badge">→</th>
-                <th className="th-badge">A Quién</th>
-                <th className="th-badge amount">€</th>
-                </tr>
-                </thead>
+
+        {debts.length === 0 ? (
+          <p>No hay deudas todavía.</p>
+        ) : (
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="col-who">Quién</th>
+                <th className="col-arrow">→</th>
+                <th className="col-to">A Quién</th>
+                <th className="col-amount">€</th>
+              </tr>
+            </thead>
             <tbody>
               {debts.map((d, i) => (
                 <tr key={i}>
-                  <td>{nameOf(d.from)}</td>
-                  <td>→</td>
-                  <td>{nameOf(d.to)}</td>
-                  <td>{d.amount.toFixed(2)}</td>
+                  <td className="col-who">{nameOf(d.from)}</td>
+                  <td className="col-arrow">→</td>
+                  <td className="col-to">{nameOf(d.to)}</td>
+                  <td className="col-amount">{d.amount.toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>

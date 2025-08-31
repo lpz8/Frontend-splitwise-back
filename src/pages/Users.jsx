@@ -2,35 +2,78 @@ import { useEffect, useState } from "react";
 import { apiGet, apiJson } from "../api";
 
 export default function Users() {
-  const [list, setList] = useState([]);
-  const [form, setForm] = useState({ name: "", email: "" });
+  const [users, setUsers] = useState([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
-  const load = () => apiGet("/users").then(setList).catch(console.error);
-  useEffect(() => { load(); }, []);
+  async function load() {
+    const u = await apiGet("/users");
+    setUsers(u);
+  }
 
-  const onSubmit = async (e) => {
+  useEffect(() => {
+    load().catch(console.error);
+  }, []);
+
+  async function onAdd(e) {
     e.preventDefault();
-    if (!form.name || !form.email) return;
-    await apiJson("POST", "/users", form);
-    setForm({ name: "", email: "" });
-    load();
-  };
+    if (!name.trim() || !email.trim()) return;
+
+    await apiJson("POST", "/users", { 
+      name: name.trim(), 
+      email: email.trim() 
+    });
+
+    setName(""); 
+    setEmail("");
+    await load();
+  }
 
   return (
-    <div className="card">
-      <h2>Usuarios</h2>
-      <form className="row" onSubmit={onSubmit}>
-        <input placeholder="Nombre" value={form.name} onChange={e => setForm(s => ({...s, name: e.target.value}))}/>
-        <input placeholder="Email" value={form.email} onChange={e => setForm(s => ({...s, email: e.target.value}))}/>
-        <button className="btn" type="submit">Añadir</button>
-      </form>
+    <div className="app">
+      <div className="card">
+        <h1>Usuarios</h1>
 
-      <table>
-        <thead><tr><th>Nombre</th><th>Email</th></tr></thead>
-        <tbody>
-          {list.map(u => <tr key={u._id}><td>{u.name}</td><td>{u.email}</td></tr>)}
-        </tbody>
-      </table>
+        <form className="form" onSubmit={onAdd}>
+          <label className="label">Nombre</label>
+          <input
+            className="input"
+            placeholder="Ej: Sergio García López"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
+
+          <label className="label" style={{ marginTop: 8 }}>Email</label>
+          <input
+            className="input"
+            placeholder="ejemplo@correo.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+
+          <button type="submit" className="btn" style={{ marginTop: 12 }}>
+            Añadir usuario
+          </button>
+        </form>
+
+        <ul className="user-list">
+          {users.map(u => (
+            <li key={u._id} className="user-item">
+              <img
+                className="avatar"
+                src={/(\b(lu|so|ma|pa|la|ro|an|be|ca)\b)/i.test(u.name) 
+                  ? "/female.png" 
+                  : "/male.png"}
+                alt="avatar"
+              />
+              <div className="user-col">
+                <div className="user-name">{u.name}</div>
+                <div className="user-email">{u.email}</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
